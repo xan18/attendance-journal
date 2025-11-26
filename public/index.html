@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Журнал посещения</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .sub {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .row.space {
+      justify-content: space-between;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #1d4ed8;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    .btn.secondary {
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+
+    .btn.danger {
+      background: #b91c1c;
+    }
+
+    .btn.sm {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn:not(:disabled):hover {
+      background: #2563eb;
+    }
+
+    .btn.secondary:not(:disabled):hover {
+      background: #111827;
+    }
+
+    .btn.danger:not(:disabled):hover {
+      background: #dc2626;
+    }
+
+    .btn:not(:disabled):active {
+      transform: scale(0.97);
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+
+    select, input[type="text"], input[type="email"], input[type="password"] {
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      outline: none;
+      min-width: 120px;
+    }
+
+    select:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+    }
+
+    .badge {
+      border-radius: 999px;
+      border: 1px solid #374151;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+
+    .schedule {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .schedule label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      cursor: pointer;
+    }
+
+    .schedule input {
+      accent-color: #3b82f6;
+    }
+
+    .table-wrapper {
+      overflow: auto;
+      border-radius: 10px;
+      border: 1px solid #1f2933;
+      background: #020617;
+      max-height: calc(100vh - 260px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+      font-size: 0.8rem;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #020617;
+    }
+
+    th, td {
+      border-bottom: 1px solid #111827;
+      padding: 8px 6px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      position: sticky;
+      left: 0;
+      background: #020617;
+      text-align: left;
+      min-width: 160px;
+      z-index: 2;
+    }
+
+    th {
+      font-weight: 500;
+      color: #9ca3af;
+    }
+
+    td.mark-cell {
+      cursor: pointer;
+      user-select: none;
+      font-weight: 600;
+      transition: background 0.1s ease, color 0.1s ease;
+      min-width: 32px;
+      min-height: 34px;
+    }
+
+    td.mark-cell:hover {
+      background: #020617;
+    }
+
+    td.mark-plus { color: #22c55e; }
+    td.mark-minus { color: #f97316; }
+
+    .student-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .student-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .student-delete-btn {
+      border: none;
+      background: transparent;
+      color: #fca5a5;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      touch-action: manipulation;
+    }
+
+    .student-delete-btn:hover {
+      border-color: #b91c1c;
+      background: rgba(185, 28, 28, 0.1);
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content:center;
+      z-index: 50;
+    }
+
+    .confirm-dialog {
+      background: #020617;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #374151;
+      max-width: 320px;
+      width: 100%;
+    }
+
+    .confirm-message {
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    .hidden { display: none; }
+
+    /* Мобильная адаптация */
+    @media (max-width: 768px) {
+      body {
+        align-items: stretch;
+        justify-content: stretch;
+      }
+
+      .app {
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .card {
+        padding: 12px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .title {
+        font-size: 1.1rem;
+      }
+
+      .row.space {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .row {
+        width: 100%;
+      }
+
+      .row > * {
+        max-width: 100%;
+      }
+
+      select,
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+      }
+
+      #folderSelect,
+      #folderNameInput,
+      #groupSelect,
+      #groupNameInput,
+      #studentNameInput {
+        flex: 1;
+      }
+
+      .schedule {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .schedule label {
+        flex: 1 1 auto;
+      }
+
+      .hint {
+        width: 100%;
+        margin-top: 4px;
+      }
+
+      .table-wrapper {
+        max-height: calc(100vh - 300px);
+      }
+
+      .badge {
+        font-size: 0.8rem;
+      }
+
+      .btn.sm {
+        padding: 6px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Блок авторизации -->
+    <div class="card" id="authCard">
+      <div class="row space">
+        <div>
+          <div class="title">Вход в журнал</div>
+          <div class="sub" id="authStatus">Не авторизован</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <input type="email" id="authEmail" placeholder="Email" style="flex:1; min-width:160px;" />
+        <input type="password" id="authPassword" placeholder="Пароль" style="flex:1; min-width:140px;" />
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn sm" id="loginBtn">Войти</button>
+        <button class="btn secondary sm" id="registerBtn">Регистрация</button>
+        <button class="btn secondary sm hidden" id="logoutBtn" style="margin-left:auto;">Выйти</button>
+      </div>
+    </div>
+
+    <!-- Журнал -->
+    <div class="card journal-section hidden">
+      <div class="header">
+        <div>
+          <div class="title">Журнал посещения</div>
+          <div class="sub" id="yearLabel"></div>
+        </div>
+        <div class="row">
+          <button class="btn secondary sm" id="prevMonthBtn">◀</button>
+          <span class="badge" id="currentMonthLabel"></span>
+          <button class="btn secondary sm" id="nextMonthBtn">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card journal-section hidden">
+      <div class="row space" style="margin-bottom: 8px;">
+        <div class="row">
+          <span class="sub">Папка:</span>
+          <select id="folderSelect"></select>
+          <input type="text" id="folderNameInput" placeholder="Название папки (например: Максимум)" style="min-width: 150px;" />
+          <button class="btn secondary" id="addFolderBtn">+ Папка</button>
+          <button class="btn danger" id="deleteFolderBtn">Удалить папку</button>
+        </div>
+      </div>
+
+      <div class="row space" style="margin-bottom: 8px;">
+        <div class="row">
+          <span class="sub">Группа:</span>
+          <select id="groupSelect"></select>
+          <input type="text" id="groupNameInput" placeholder="Название группы (например: 15:00)" style="min-width: 150px;" />
+          <button class="btn secondary" id="addGroupBtn">+ Группа</button>
+          <button class="btn danger" id="deleteGroupBtn">Удалить группу</button>
+          <label class="sub" style="display:flex;align-items:center;gap:4px;margin-left:4px;">
+            <input type="checkbox" id="showAllGroupsToggle" /> Показать все группы папки
+          </label>
+        </div>
+        <div class="schedule">
+          <span class="sub">Расписание:</span>
+          <label>
+            <input type="radio" name="schedule" value="135" /> Пн / Ср / Пт
+          </label>
+          <label>
+            <input type="radio" name="schedule" value="246" /> Вт / Чт / Сб
+          </label>
+        </div>
+      </div>
+
+      <div class="row" style="margin-bottom: 4px;">
+        <input type="text" id="studentNameInput" placeholder="Имя ученика (ФИО + год)" style="flex:1; min-width: 200px;" />
+        <button class="btn" id="addStudentBtn">+ Ученика</button>
+        <span class="hint">Клик по ячейке: переключение между "+", "-" и пусто.</span>
+      </div>
+      <div class="table-wrapper">
+        <div id="tablesContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm-overlay hidden" id="confirmOverlay">
+    <div class="confirm-dialog">
+      <div class="confirm-message" id="confirmMessage"></div>
+      <div class="row" style="justify-content: flex-end; margin-top: 8px;">
+        <button class="btn secondary sm" id="confirmNoBtn">Отмена</button>
+        <button class="btn danger sm" id="confirmYesBtn">Удалить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY_NEW = "attendanceJournalState_v3"; // локальный кэш (можно оставить)
+
+      // ---- AUTH UI ----
+      const authEmailInput = document.getElementById("authEmail");
+      const authPasswordInput = document.getElementById("authPassword");
+      const loginBtn = document.getElementById("loginBtn");
+      const registerBtn = document.getElementById("registerBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const authStatus = document.getElementById("authStatus");
+      const journalSections = document.querySelectorAll(".journal-section");
+
+      // ---- JOURNAL UI ----
+      const yearLabel = document.getElementById("yearLabel");
+      const monthLabel = document.getElementById("currentMonthLabel");
+      const folderSelect = document.getElementById("folderSelect");
+      const folderNameInput = document.getElementById("folderNameInput");
+      const addFolderBtn = document.getElementById("addFolderBtn");
+      const deleteFolderBtn = document.getElementById("deleteFolderBtn");
+      const groupSelect = document.getElementById("groupSelect");
+      const groupNameInput = document.getElementById("groupNameInput");
+      const addGroupBtn = document.getElementById("addGroupBtn");
+      const deleteGroupBtn = document.getElementById("deleteGroupBtn");
+      const studentNameInput = document.getElementById("studentNameInput");
+      const addStudentBtn = document.getElementById("addStudentBtn");
+      const tablesContainer = document.getElementById("tablesContainer");
+      const scheduleRadios = document.querySelectorAll('input[name="schedule"]');
+      const prevMonthBtn = document.getElementById("prevMonthBtn");
+      const nextMonthBtn = document.getElementById("nextMonthBtn");
+      const showAllToggle = document.getElementById("showAllGroupsToggle");
+
+      const confirmOverlay = document.getElementById("confirmOverlay");
+      const confirmMessage = document.getElementById("confirmMessage");
+      const confirmYesBtn = document.getElementById("confirmYesBtn");
+      const confirmNoBtn = document.getElementById("confirmNoBtn");
+
+      let confirmCallback = null;
+      let authToken = localStorage.getItem("authToken") || null;
+      let state = null;
+      let eventsBound = false;
+
+      function setJournalVisible(isVisible) {
+        journalSections.forEach((el) => {
+          if (isVisible) el.classList.remove("hidden");
+          else el.classList.add("hidden");
+        });
+      }
+
+      function setAuthUILoggedOut() {
+        authStatus.textContent = "Не авторизован";
+        logoutBtn.classList.add("hidden");
+        setJournalVisible(false);
+      }
+
+      function setAuthUILoggedIn() {
+        authStatus.textContent = "Вход выполнен";
+        logoutBtn.classList.remove("hidden");
+        setJournalVisible(true);
+      }
+
+      async function apiRequest(path, options = {}) {
+        const opts = {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+          }
+        };
+        if (authToken) {
+          opts.headers["Authorization"] = "Bearer " + authToken;
+        }
+        const res = await fetch(path, opts);
+        if (res.status === 401) {
+          authToken = null;
+          localStorage.removeItem("authToken");
+          setAuthUILoggedOut();
+          throw new Error("unauthorized");
+        }
+        return res;
+      }
+
+      function createDefaultState() {
+        const now = new Date();
+        const folderId = "f_default";
+        const groupId = "g1";
+        return {
+          year: now.getFullYear(),
+          month: now.getMonth(),
+          folders: [
+            { id: folderId, name: "Мои группы" }
+          ],
+          groups: [
+            {
+              id: groupId,
+              folderId,
+              name: "Группа 1",
+              schedule: [1, 3, 5],
+              students: [],
+              marks: {}
+            }
+          ],
+          activeFolderId: folderId,
+          activeGroupId: groupId
+        };
+      }
+
+      async function loadStateFromServer() {
+        const res = await apiRequest("/api/state");
+        const json = await res.json();
+        if (json && json.data) {
+          state = json.data;
+        } else {
+          state = createDefaultState();
+          await saveStateToServer();
+        }
+        try {
+          localStorage.setItem(STORAGE_KEY_NEW, JSON.stringify(state));
+        } catch {}
+      }
+
+      async function saveStateToServer() {
+        if (!authToken || !state) return;
+        try {
+          await apiRequest("/api/state", {
+            method: "POST",
+            body: JSON.stringify({ data: state })
+          });
+          try {
+            localStorage.setItem(STORAGE_KEY_NEW, JSON.stringify(state));
+          } catch {}
+        } catch (e) {
+          console.error("save error", e);
+        }
+      }
+
+      function saveState() {
+        saveStateToServer();
+      }
+
+      function getActiveFolder() {
+        let f = state.folders.find((x) => x.id === state.activeFolderId);
+        if (!f && state.folders.length) {
+          f = state.folders[0];
+          state.activeFolderId = f.id;
+        }
+        return f || null;
+      }
+
+      function getActiveGroup() {
+        const folder = getActiveFolder();
+        if (!folder) return null;
+        let g = state.groups.find((x) => x.id === state.activeGroupId && x.folderId === folder.id);
+        if (!g) {
+          g = state.groups.find((x) => x.folderId === folder.id) || null;
+          if (g) state.activeGroupId = g.id;
+        }
+        return g || null;
+      }
+
+      function generateDatesForMonth(year, monthIndex, weekdays) {
+        const result = [];
+        const date = new Date(year, monthIndex, 1);
+        while (date.getMonth() === monthIndex) {
+          const jsDay = date.getDay(); // 0=Sun..6=Sat
+          const isoDay = jsDay === 0 ? 7 : jsDay; // 1=Mon..7=Sun
+          if (weekdays.includes(isoDay) && isoDay !== 7) {
+            const d = String(date.getDate()).padStart(2, "0");
+            const m = String(monthIndex + 1).padStart(2, "0");
+            const dateKey = `${d}.${m}.${year}`;
+            result.push({
+              key: dateKey,
+              label: d,
+              weekday: isoDay
+            });
+          }
+          date.setDate(date.getDate() + 1);
+        }
+        return result;
+      }
+
+      function getMonthName(monthIndex) {
+        const names = [
+          "Январь",
+          "Февраль",
+          "Март",
+          "Апрель",
+          "Май",
+          "Июнь",
+          "Июль",
+          "Август",
+          "Сентябрь",
+          "Октябрь",
+          "Ноябрь",
+          "Декабрь"
+        ];
+        return names[monthIndex] || "";
+      }
+
+      function renderHeader() {
+        yearLabel.textContent = `Текущий год: ${state.year}`;
+        monthLabel.textContent = `${getMonthName(state.month)} ${state.year}`;
+      }
+
+      function renderFolders() {
+        const activeId = state.activeFolderId;
+        folderSelect.innerHTML = "";
+        state.folders.forEach((f) => {
+          const opt = document.createElement("option");
+          opt.value = f.id;
+          opt.textContent = f.name;
+          if (f.id === activeId) opt.selected = true;
+          folderSelect.appendChild(opt);
+        });
+        deleteFolderBtn.disabled = state.folders.length <= 1;
+      }
+
+      function renderGroups() {
+        const folder = getActiveFolder();
+        groupSelect.innerHTML = "";
+        if (!folder) {
+          deleteGroupBtn.disabled = true;
+          return;
+        }
+        const groupsOfFolder = state.groups.filter((g) => g.folderId === folder.id);
+        const activeId = state.activeGroupId;
+        groupsOfFolder.forEach((g) => {
+          const opt = document.createElement("option");
+          opt.value = g.id;
+          opt.textContent = g.name;
+          if (g.id === activeId) opt.selected = true;
+          groupSelect.appendChild(opt);
+        });
+        deleteGroupBtn.disabled = groupsOfFolder.length <= 0;
+      }
+
+      function renderScheduleControls() {
+        const group = getActiveGroup();
+        const sorted = group && group.schedule ? [...group.schedule].sort() : [];
+        const is135 = JSON.stringify(sorted) === JSON.stringify([1, 3, 5]);
+        scheduleRadios.forEach((radio) => {
+          if (!group) {
+            radio.checked = false;
+            return;
+          }
+          if (radio.value === "135") {
+            radio.checked = is135;
+          } else if (radio.value === "246") {
+            radio.checked = !is135;
+          }
+        });
+      }
+
+      function buildGroupTable(group) {
+        const dates = generateDatesForMonth(state.year, state.month, group.schedule);
+
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        const headRow = document.createElement("tr");
+        const thName = document.createElement("th");
+        thName.textContent = "Ученик";
+        headRow.appendChild(thName);
+
+        dates.forEach((d) => {
+          const th = document.createElement("th");
+          th.textContent = d.label;
+          th.title = d.key;
+          headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+
+        const tbody = document.createElement("tbody");
+
+        group.students.forEach((student) => {
+          const tr = document.createElement("tr");
+          const tdName = document.createElement("td");
+          const wrap = document.createElement("div");
+          wrap.className = "student-row";
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "student-name";
+          nameSpan.textContent = student.name;
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "student-delete-btn";
+          delBtn.textContent = "×";
+          delBtn.title = "Удалить ученика";
+          delBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            handleDeleteStudent(group.id, student.id);
+          });
+
+          wrap.appendChild(nameSpan);
+          wrap.appendChild(delBtn);
+          tdName.appendChild(wrap);
+          tr.appendChild(tdName);
+
+          dates.forEach((d) => {
+            const td = document.createElement("td");
+            td.className = "mark-cell";
+            td.dataset.studentId = String(student.id);
+            td.dataset.date = d.key;
+
+            const key = `${student.id}-${d.key}`;
+            const val = group.marks[key] || "";
+            if (val === "+") {
+              td.textContent = "+";
+              td.classList.add("mark-plus");
+            } else if (val === "-") {
+              td.textContent = "-";
+              td.classList.add("mark-minus");
+            } else {
+              td.textContent = "";
+            }
+
+            td.addEventListener("click", () => handleToggleMark(group.id, student.id, d.key));
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        return table;
+      }
+
+      function renderTables() {
+        const folder = getActiveFolder();
+        tablesContainer.innerHTML = "";
+        if (!folder) return;
+
+        const groupsOfFolder = state.groups.filter((g) => g.folderId === folder.id);
+        if (!groupsOfFolder.length) return;
+
+        const active = getActiveGroup();
+        const showAll = showAllToggle && showAllToggle.checked;
+        const groupsToRender = showAll ? groupsOfFolder : (active ? [active] : []);
+
+        groupsToRender.forEach((group) => {
+          const block = document.createElement("div");
+          block.style.marginBottom = "12px";
+
+          const headerRow = document.createElement("div");
+          headerRow.className = "row";
+          headerRow.style.margin = "0 4px 6px";
+
+          const nameEl = document.createElement("div");
+          nameEl.className = "sub";
+          nameEl.textContent = `${folder.name} — ${group.name}`;
+
+          headerRow.appendChild(nameEl);
+          block.appendChild(headerRow);
+
+          const table = buildGroupTable(group);
+          block.appendChild(table);
+          tablesContainer.appendChild(block);
+        });
+      }
+
+      function handleToggleMark(groupId, studentId, dateKey) {
+        const group = state.groups.find((g) => g.id === groupId);
+        if (!group) return;
+        const key = `${studentId}-${dateKey}`;
+        const current = group.marks[key] || "";
+        let next = "";
+        if (current === "") next = "+";
+        else if (current === "+") next = "-";
+        else next = "";
+        if (next === "") delete group.marks[key];
+        else group.marks[key] = next;
+        saveState();
+        renderTables();
+      }
+
+      function handleAddFolder() {
+        const name = (folderNameInput.value || "").trim();
+        if (!name) return;
+        const id = `f_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        state.folders.push({ id, name });
+        state.activeFolderId = id;
+        folderNameInput.value = "";
+        saveState();
+        renderAll();
+      }
+
+      function handleDeleteFolder() {
+        if (state.folders.length <= 1) return;
+        const folder = getActiveFolder();
+        if (!folder) return;
+        openConfirm(`Удалить папку "${folder.name}" и все группы внутри?`, () => {
+          state.folders = state.folders.filter((f) => f.id !== folder.id);
+          state.groups = state.groups.filter((g) => g.folderId !== folder.id);
+          if (!state.folders.length) {
+            const fresh = createDefaultState();
+            state.year = fresh.year;
+            state.month = fresh.month;
+            state.folders = fresh.folders;
+            state.groups = fresh.groups;
+            state.activeFolderId = fresh.activeFolderId;
+            state.activeGroupId = fresh.activeGroupId;
+          } else {
+            state.activeFolderId = state.folders[0].id;
+            const firstGroup = state.groups.find((g) => g.folderId === state.activeFolderId);
+            state.activeGroupId = firstGroup ? firstGroup.id : null;
+          }
+          saveState();
+          renderAll();
+        });
+      }
+
+      function handleAddGroup() {
+        const folder = getActiveFolder();
+        if (!folder) return;
+        const name = (groupNameInput.value || "").trim();
+        if (!name) return;
+        const id = `g_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        state.groups.push({
+          id,
+          folderId: folder.id,
+          name,
+          schedule: [1, 3, 5],
+          students: [],
+          marks: {}
+        });
+        state.activeGroupId = id;
+        groupNameInput.value = "";
+        saveState();
+        renderAll();
+      }
+
+      function handleDeleteGroup() {
+        const folder = getActiveFolder();
+        if (!folder) return;
+        const group = getActiveGroup();
+        if (!group) return;
+        openConfirm(`Удалить группу "${group.name}"? Все отметки будут потеряны.`, () => {
+          state.groups = state.groups.filter((g) => g.id !== group.id);
+          const nextGroup = state.groups.find((g) => g.folderId === folder.id) || null;
+          state.activeGroupId = nextGroup ? nextGroup.id : null;
+          saveState();
+          renderAll();
+        });
+      }
+
+      function handleAddStudent() {
+        const group = getActiveGroup();
+        if (!group) return;
+        const name = (studentNameInput.value || "").trim();
+        if (!name) return;
+        const id = `s_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        group.students.push({ id, name });
+        studentNameInput.value = "";
+        saveState();
+        renderTables();
+      }
+
+      function handleDeleteStudent(groupId, studentId) {
+        const group = state.groups.find((g) => g.id === groupId);
+        if (!group) return;
+        const student = group.students.find((s) => s.id === studentId);
+        if (!student) return;
+        openConfirm(`Удалить ученика "${student.name}" и все его отметки?`, () => {
+          group.students = group.students.filter((s) => s.id !== studentId);
+          Object.keys(group.marks).forEach((key) => {
+            if (key.startsWith(`${studentId}-`)) delete group.marks[key];
+          });
+          saveState();
+          renderTables();
+        });
+      }
+
+      function handleFolderChange() {
+        const id = folderSelect.value;
+        if (!id) return;
+        state.activeFolderId = id;
+        const firstGroup = state.groups.find((g) => g.folderId === id) || null;
+        state.activeGroupId = firstGroup ? firstGroup.id : null;
+        saveState();
+        renderAll();
+      }
+
+      function handleGroupChange() {
+        const id = groupSelect.value;
+        if (!id) return;
+        state.activeGroupId = id;
+        saveState();
+        renderScheduleControls();
+        renderTables();
+      }
+
+      function handleScheduleChange(event) {
+        const group = getActiveGroup();
+        if (!group) return;
+        const value = event.target.value;
+        if (value === "135") group.schedule = [1, 3, 5];
+        else if (value === "246") group.schedule = [2, 4, 6];
+        saveState();
+        renderTables();
+      }
+
+      function changeMonth(delta) {
+        let m = state.month + delta;
+        let y = state.year;
+        if (m < 0) {
+          m = 11;
+          y -= 1;
+        } else if (m > 11) {
+          m = 0;
+          y += 1;
+        }
+        state.month = m;
+        state.year = y;
+        saveState();
+        renderHeader();
+        renderTables();
+      }
+
+      function openConfirm(message, onYes) {
+        confirmMessage.textContent = message;
+        confirmCallback = onYes;
+        confirmOverlay.classList.remove("hidden");
+      }
+
+      function closeConfirm() {
+        confirmOverlay.classList.add("hidden");
+        confirmCallback = null;
+      }
+
+      confirmYesBtn.addEventListener("click", () => {
+        if (typeof confirmCallback === "function") confirmCallback();
+        closeConfirm();
+      });
+
+      confirmNoBtn.addEventListener("click", () => {
+        closeConfirm();
+      });
+
+      confirmOverlay.addEventListener("click", (e) => {
+        if (e.target === confirmOverlay) closeConfirm();
+      });
+
+      function ensureYearMonth() {
+        if (!state) return;
+        if (typeof state.year !== "number" || typeof state.month !== "number") {
+          const now = new Date();
+          state.year = now.getFullYear();
+          state.month = now.getMonth();
+        }
+      }
+
+      function renderAll() {
+        renderHeader();
+        renderFolders();
+        renderGroups();
+        renderScheduleControls();
+        renderTables();
+      }
+
+      function bindEvents() {
+        if (eventsBound) return;
+        eventsBound = true;
+
+        addFolderBtn.addEventListener("click", handleAddFolder);
+        folderNameInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddFolder();
+          }
+        });
+        deleteFolderBtn.addEventListener("click", handleDeleteFolder);
+
+        addGroupBtn.addEventListener("click", handleAddGroup);
+        groupNameInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddGroup();
+          }
+        });
+        deleteGroupBtn.addEventListener("click", handleDeleteGroup);
+
+        addStudentBtn.addEventListener("click", handleAddStudent);
+        studentNameInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddStudent();
+          }
+        });
+
+        folderSelect.addEventListener("change", handleFolderChange);
+        groupSelect.addEventListener("change", handleGroupChange);
+
+        scheduleRadios.forEach((radio) => {
+          radio.addEventListener("change", handleScheduleChange);
+        });
+
+        prevMonthBtn.addEventListener("click", () => changeMonth(-1));
+        nextMonthBtn.addEventListener("click", () => changeMonth(1));
+
+        if (showAllToggle) {
+          showAllToggle.addEventListener("change", () => {
+            renderTables();
+          });
+        }
+      }
+
+      // ---- AUTH handlers ----
+      async function handleLogin() {
+        const email = (authEmailInput.value || "").trim();
+        const password = authPasswordInput.value || "";
+        if (!email || !password) return;
+
+        try {
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            authStatus.textContent = json.error || "Ошибка входа";
+            return;
+          }
+          authToken = json.token;
+          localStorage.setItem("authToken", authToken);
+          await loadStateFromServer();
+          ensureYearMonth();
+          setAuthUILoggedIn();
+          bindEvents();
+          renderAll();
+        } catch (e) {
+          console.error(e);
+          authStatus.textContent = "Ошибка сети";
+        }
+      }
+
+      async function handleRegister() {
+        const email = (authEmailInput.value || "").trim();
+        const password = authPasswordInput.value || "";
+        if (!email || !password) return;
+
+        try {
+          const res = await fetch("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            authStatus.textContent = json.error || "Ошибка регистрации";
+            return;
+          }
+          authToken = json.token;
+          localStorage.setItem("authToken", authToken);
+          await loadStateFromServer();
+          ensureYearMonth();
+          setAuthUILoggedIn();
+          bindEvents();
+          renderAll();
+        } catch (e) {
+          console.error(e);
+          authStatus.textContent = "Ошибка сети";
+        }
+      }
+
+      function handleLogout() {
+        authToken = null;
+        localStorage.removeItem("authToken");
+        state = null;
+        tablesContainer.innerHTML = "";
+        setAuthUILoggedOut();
+      }
+
+      loginBtn.addEventListener("click", handleLogin);
+      registerBtn.addEventListener("click", handleRegister);
+      logoutBtn.addEventListener("click", handleLogout);
+
+      // --- Старт ---
+      (async function init() {
+        if (!authToken) {
+          setAuthUILoggedOut();
+          return;
+        }
+        try {
+          await loadStateFromServer();
+          ensureYearMonth();
+          setAuthUILoggedIn();
+          bindEvents();
+          renderAll();
+        } catch (e) {
+          console.error(e);
+          setAuthUILoggedOut();
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>
